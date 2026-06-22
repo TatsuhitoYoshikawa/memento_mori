@@ -71,11 +71,58 @@ class LifeTable {
     return eLow + (eHigh - eLow) * fraction;
   }
 
-  /// 死亡予測日時を1回だけ確定する（カウントダウンは滑らかさ優先のため再計算しない）。
+  /// 現在時刻における残り余命を「日」単位で返す（要件(4)）。
+  /// 起動・暦日変化のたびに再計算し、死亡予測日時の算出と差分計算で共用する。
+  double remainingDays(UserProfile p, DateTime now) =>
+      remainingYears(p, now) * 365.25;
+
+  /// 死亡予測日時 ＝ now ＋ 残り余命。
+  /// 加齢で平均余命が伸びるため now が進むと後ろ倒しになる（再計算前提）。
   DateTime deathDateTime(UserProfile p, DateTime now) {
-    final double years = remainingYears(p, now);
-    final double days = years * 365.25; // 余命を日単位へ（要件(4)）
-    final int millis = (days * 24 * 60 * 60 * 1000).round();
+    final int millis = (remainingDays(p, now) * 24 * 60 * 60 * 1000).round();
     return now.add(Duration(milliseconds: millis));
+  }
+}
+
+/// 前回起動からの残り寿命の変化を分解した結果（すべて「日」単位）。
+class LifeDelta {
+  /// 経過時間（日）。t1 − t0。
+  final double elapsedDays;
+
+  /// 時間の経過による減少（＝ −elapsedDays）。
+  final double timeDecreaseDays;
+
+  /// 加齢による平均余命の伸び（常に正。＝ 予測死亡日が後ろ倒しになった量）。
+  final double agingGainDays;
+
+  /// 差し引きの残り寿命の変化（＝ newRemaining − oldRemaining ＝ 伸び − 経過）。
+  final double netChangeDays;
+
+  const LifeDelta({
+    required this.elapsedDays,
+    required this.timeDecreaseDays,
+    required this.agingGainDays,
+    required this.netChangeDays,
+  });
+
+  /// 前回スナップショット（t0 の残り余命）と今回の値から差分を分解する。
+  ///
+  /// - 時間の経過による減少 = −elapsed
+  /// - 加齢による平均余命の伸び = (new − old) + elapsed（常に正）
+  /// - 差し引き = new − old（上記2つの和）
+  factory LifeDelta.compute({
+    required double oldRemainingDays,
+    required DateTime oldOpenedAt,
+    required double newRemainingDays,
+    required DateTime now,
+  }) {
+    final double elapsed = now.difference(oldOpenedAt).inSeconds / 86400.0;
+    final double net = newRemainingDays - oldRemainingDays;
+    return LifeDelta(
+      elapsedDays: elapsed,
+      timeDecreaseDays: -elapsed,
+      agingGainDays: net + elapsed,
+      netChangeDays: net,
+    );
   }
 }

@@ -79,6 +79,51 @@ void main() {
     });
   });
 
+  group('LifeDelta（起動時の差分分解）', () {
+    test('加齢で余命が伸びる典型ケース：30日経過・余命は27日減少', () {
+      final old = DateTime(2026, 6, 22);
+      final now = DateTime(2026, 7, 22); // 30日後
+      final d = LifeDelta.compute(
+        oldRemainingDays: 10000.0,
+        oldOpenedAt: old,
+        newRemainingDays: 9973.0, // 30日のうち27日分しか減っていない
+        now: now,
+      );
+      expect(d.elapsedDays, closeTo(30.0, 1e-9));
+      expect(d.timeDecreaseDays, closeTo(-30.0, 1e-9)); // 時間経過による減少
+      expect(d.agingGainDays, closeTo(3.0, 1e-9)); // 加齢による伸び（正）
+      expect(d.agingGainDays, greaterThan(0)); // 伸びは常に正
+      expect(d.netChangeDays, closeTo(-27.0, 1e-9)); // 差し引き
+      // 恒等式：差引 ＝ 伸び ＋ 時間減少 ＝ new − old。
+      expect(d.netChangeDays, closeTo(d.agingGainDays + d.timeDecreaseDays, 1e-9));
+    });
+
+    test('表上限クランプ中（余命一定）は 伸び ＝ 経過', () {
+      final old = DateTime(2026, 6, 22);
+      final now = DateTime(2026, 6, 27); // 5日後
+      final d = LifeDelta.compute(
+        oldRemainingDays: 1460.0,
+        oldOpenedAt: old,
+        newRemainingDays: 1460.0, // 変化なし
+        now: now,
+      );
+      expect(d.netChangeDays, closeTo(0.0, 1e-9));
+      expect(d.agingGainDays, closeTo(d.elapsedDays, 1e-9)); // 伸び ＝ 経過
+    });
+  });
+
+  group('formatSignedDuration', () {
+    test('負の日数', () {
+      expect(formatSignedDuration(-1.5), '−1日12時間');
+    });
+    test('正の端数（日なし）', () {
+      expect(formatSignedDuration(0.1), '＋2時間24分');
+    });
+    test('ゼロは分を表示', () {
+      expect(formatSignedDuration(0), '＋0分');
+    });
+  });
+
   group('countdown breakdown', () {
     test('既知の差分を年月日時分秒へ分解', () {
       final now = DateTime(2026, 1, 1, 0, 0, 0);

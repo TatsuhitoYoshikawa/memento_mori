@@ -45,6 +45,25 @@ DateTime addMonths(DateTime d, int months) {
   return DateTime(year, month, day, d.hour, d.minute, d.second, d.millisecond);
 }
 
+/// 符号付きの日数を「＋○日○時間○分」「−○日○時間○分」へ整形する。
+/// 差分のお知らせ表示に用いる（端数は時間・分まで）。
+String formatSignedDuration(double days) {
+  final int totalSeconds = (days.abs() * 86400).round();
+  final String sign = days < 0 ? '−' : '＋';
+  final int d = totalSeconds ~/ 86400;
+  int rem = totalSeconds % 86400;
+  final int h = rem ~/ 3600;
+  rem %= 3600;
+  final int m = rem ~/ 60;
+
+  final buf = StringBuffer(sign);
+  if (d > 0) buf.write('$d日');
+  if (h > 0) buf.write('$h時間');
+  // 日も時間も0、または分が残る場合は分を出す（必ず何か表示する）。
+  if (m > 0 || (d == 0 && h == 0)) buf.write('$m分');
+  return buf.toString();
+}
+
 /// now から target までの残り時間をカレンダー基準で 年月日時分秒に分解する。
 Countdown breakdown(DateTime now, DateTime target) {
   if (!target.isAfter(now)) return Countdown.zero;
