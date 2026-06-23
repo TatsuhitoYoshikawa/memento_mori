@@ -7,6 +7,10 @@ import '../services/life_expectancy.dart';
 import '../services/profile_store.dart';
 import '../theme/app_theme.dart';
 
+/// カウントダウンの表示単位。
+/// [full] は 年月日時分秒の内訳、その他は総量を単一単位で表示する。
+enum CountUnit { full, days, hours, seconds }
+
 /// 残り寿命を毎秒カウントダウン表示する画面。
 ///
 /// 余命は固定せず、起動・復帰・暦日変化のたびに再計算する（加齢で平均余命が伸びるため）。
@@ -28,6 +32,8 @@ class _CountdownScreenState extends State<CountdownScreen>
   DateTime? _deathDateTime;
   DateTime? _lastRecomputeDate; // 暦日変化の検知用
   Countdown _countdown = Countdown.zero;
+  Duration _remaining = Duration.zero; // 総残り時間（単一単位表示用）
+  CountUnit _unit = CountUnit.full;
   String? _error;
 
   @override
@@ -111,7 +117,11 @@ class _CountdownScreenState extends State<CountdownScreen>
     if (_lastRecomputeDate != null && _dateOnly(now) != _lastRecomputeDate) {
       _recompute(now);
     }
-    setState(() => _countdown = breakdown(now, _deathDateTime!));
+    final remaining = _deathDateTime!.difference(now);
+    setState(() {
+      _countdown = breakdown(now, _deathDateTime!);
+      _remaining = remaining.isNegative ? Duration.zero : remaining;
+    });
   }
 
   @override
@@ -175,38 +185,21 @@ class _CountdownScreenState extends State<CountdownScreen>
                         style: AppText.serif(size: 22, color: AppColors.textTitle),
                       ),
 
-                      // ---- カウントダウングリッド ----
+                      // ---- カウントダウン表示 ----
                       Expanded(
                         child: Center(
                           child: c.expired
-                              ? Text('🕊',
-                                  style: const TextStyle(fontSize: 64))
-                              : Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        _cell('${c.years}', '年'),
-                                        const SizedBox(width: 14),
-                                        _cell('${c.months}', 'ヶ月'),
-                                        const SizedBox(width: 14),
-                                        _cell('${c.days}', '日'),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 14),
-                                    Row(
-                                      children: [
-                                        _cell(_pad(c.hours), '時間'),
-                                        const SizedBox(width: 14),
-                                        _cell(_pad(c.minutes), '分'),
-                                        const SizedBox(width: 14),
-                                        _cell(_pad(c.seconds), '秒', live: true),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                              ? const Text('🕊',
+                                  style: TextStyle(fontSize: 64))
+                              : _countdownDisplay(c),
                         ),
                       ),
+
+                      // ---- 表示単位の切り替え ----
+                      if (!c.expired) ...[
+                        _unitSelector(),
+                        const SizedBox(height: 22),
+                      ],
 
                       // ---- 人生プログレス ----
                       if (!c.expired) ...[
@@ -314,6 +307,137 @@ class _CountdownScreenState extends State<CountdownScreen>
         ),
       ),
     );
+  }
+
+  /// 選択中の表示単位に応じたカウントダウン表示を返す。
+  Widget _countdownDisplay(Countdown c) {
+    switch (_unit) {
+      case CountUnit.full:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                _cell('${c.years}', '年'),
+                const SizedBox(width: 14),
+                _cell('${c.months}', 'ヶ月'),
+                const SizedBox(width: 14),
+                _cell('${c.days}', '日'),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                _cell(_pad(c.hours), '時間'),
+                const SizedBox(width: 14),
+                _cell(_pad(c.minutes), '分'),
+                const SizedBox(width: 14),
+                _cell(_pad(c.seconds), '秒', live: true),
+              ],
+            ),
+          ],
+        );
+      case CountUnit.days:
+        return _singleValue(_grouped(_remaining.inDays), '日');
+      case CountUnit.hours:
+        return _singleValue(_grouped(_remaining.inHours), '時間');
+      case CountUnit.seconds:
+        return _singleValue(_grouped(_remaining.inSeconds), '秒');
+    }
+  }
+
+  /// 総量を単一単位で大きく表示する（桁数が多くても収まるよう自動縮小）。
+  Widget _singleValue(String value, String unit) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: AppText.serif(
+              size: 68,
+              weight: FontWeight.w700,
+              height: 1.0,
+              tabular: true,
+              color: const Color(0xFFD9694F),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          unit,
+          style: AppText.ui(
+            size: 16,
+            weight: FontWeight.w500,
+            color: AppColors.textFaint,
+            letterSpacing: 1.0,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 表示単位を選ぶセグメント。
+  Widget _unitSelector() {
+    const items = <(CountUnit, String)>[
+      (CountUnit.full, '年月日'),
+      (CountUnit.days, '日'),
+      (CountUnit.hours, '時間'),
+      (CountUnit.seconds, '秒'),
+    ];
+    return Row(
+      children: [
+        for (int i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(child: _unitChip(items[i].$1, items[i].$2)),
+        ],
+      ],
+    );
+  }
+
+  Widget _unitChip(CountUnit unit, String label) {
+    final selected = _unit == unit;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _unit = unit),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: selected ? AppGradients.accent : null,
+            color: selected ? null : AppColors.cellFill,
+            border: Border.all(
+              color: selected ? Colors.transparent : AppColors.borderSoft,
+              width: 1,
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppText.ui(
+              size: 13,
+              weight: FontWeight.w600,
+              color: selected ? Colors.white : AppColors.textLabel,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 整数を 3 桁区切りにする（例: 1234567 → 1,234,567）。
+  static String _grouped(int n) {
+    final s = n.abs().toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return (n < 0 ? '-' : '') + buf.toString();
   }
 }
 

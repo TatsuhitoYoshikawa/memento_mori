@@ -21,8 +21,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
   assets:
     - assets/life_table.json
+
+# アプリアイコン生成設定（dart run flutter_launcher_icons で適用）。
+# マスター(不透明・角丸なし)を iOS/汎用に、Android はアダプティブ2レイヤーを使用。
+flutter_launcher_icons:
+  ios: true
+  android: true
+  remove_alpha_ios: true
+  image_path: "icons/memento_icon_1024.png"
+  adaptive_icon_background: "icons/android/memento_bg_1024.png"
+  adaptive_icon_foreground: "icons/android/memento_fg_1024.png"
