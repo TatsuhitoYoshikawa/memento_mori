@@ -6,6 +6,7 @@ import 'models/user_profile.dart';
 import 'screens/countdown_screen.dart';
 import 'screens/input_screen.dart';
 import 'services/profile_store.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const MementoMoriApp());
@@ -20,7 +21,11 @@ class MementoMoriApp extends StatelessWidget {
       title: 'メメント・モリ',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorSchemeSeed: Colors.indigo,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.accent,
+          primary: AppColors.accent,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFFFF7EF),
         useMaterial3: true,
       ),
       // 日本語表示（国名ピッカー・日付ピッカーを含む）。
@@ -48,7 +53,12 @@ class _Root extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: DecoratedBox(
+              decoration: BoxDecoration(gradient: AppGradients.countdown),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.accent),
+              ),
+            ),
           );
         }
         final profile = snapshot.data;
