@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- google_fonts が初回起動時にフォントを取得するために必要。 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="余命時計"
         android:name="${applicationName}"

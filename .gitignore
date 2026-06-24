@@ -14,3 +14,9 @@ build/
 
 # OS
 .DS_Store
+
+# Android リリース署名（絶対にコミットしない）
+android/key.properties
+*.jks
+*.keystore
+key.properties
