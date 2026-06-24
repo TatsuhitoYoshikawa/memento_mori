@@ -114,13 +114,23 @@ void main() {
 
   group('formatSignedDuration', () {
     test('負の日数', () {
-      expect(formatSignedDuration(-1.5), '−1日12時間');
+      expect(formatSignedDuration(-1.5), '−1日12時間0分0秒');
     });
     test('正の端数（日なし）', () {
-      expect(formatSignedDuration(0.1), '＋2時間24分');
+      expect(formatSignedDuration(0.1), '＋2時間24分0秒');
     });
-    test('ゼロは分を表示', () {
-      expect(formatSignedDuration(0), '＋0分');
+    test('ゼロは秒を表示', () {
+      expect(formatSignedDuration(0), '＋0秒');
+    });
+    test('分・秒の端数', () {
+      // 65秒 = 1分5秒。
+      expect(formatSignedDuration(65 / 86400), '＋1分5秒');
+    });
+    test('秒未満は切り捨て', () {
+      // 1.9秒 → 1秒。
+      expect(formatSignedDuration(1.9 / 86400), '＋1秒');
+      // 負側も絶対値で切り捨て（−59.9秒 → −59秒）。
+      expect(formatSignedDuration(-59.9 / 86400), '−59秒');
     });
   });
 

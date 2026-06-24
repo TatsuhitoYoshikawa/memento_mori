@@ -45,22 +45,36 @@ DateTime addMonths(DateTime d, int months) {
   return DateTime(year, month, day, d.hour, d.minute, d.second, d.millisecond);
 }
 
-/// 符号付きの日数を「＋○日○時間○分」「−○日○時間○分」へ整形する。
-/// 差分のお知らせ表示に用いる（端数は時間・分まで）。
+/// 符号付きの日数を「＋○日○時間○分○秒」「−○日○時間○分○秒」へ整形する。
+/// 差分のお知らせ表示に用いる。秒未満は切り捨て、秒は最小単位として常に表示する。
 String formatSignedDuration(double days) {
-  final int totalSeconds = (days.abs() * 86400).round();
+  // 秒未満は切り捨て。
+  final int totalSeconds = (days.abs() * 86400).floor();
   final String sign = days < 0 ? '−' : '＋';
   final int d = totalSeconds ~/ 86400;
   int rem = totalSeconds % 86400;
   final int h = rem ~/ 3600;
   rem %= 3600;
   final int m = rem ~/ 60;
+  final int s = rem % 60;
 
+  // 上位単位を一度表示したら、下位は0でも詰めて表示する（例: 1日12時間0分0秒）。
   final buf = StringBuffer(sign);
-  if (d > 0) buf.write('$d日');
-  if (h > 0) buf.write('$h時間');
-  // 日も時間も0、または分が残る場合は分を出す（必ず何か表示する）。
-  if (m > 0 || (d == 0 && h == 0)) buf.write('$m分');
+  bool started = false;
+  if (d > 0) {
+    buf.write('$d日');
+    started = true;
+  }
+  if (started || h > 0) {
+    buf.write('$h時間');
+    started = true;
+  }
+  if (started || m > 0) {
+    buf.write('$m分');
+    started = true;
+  }
+  // 秒は最小単位として常に表示する（上位がすべて0でも「＋0秒」を出す）。
+  buf.write('$s秒');
   return buf.toString();
 }
 

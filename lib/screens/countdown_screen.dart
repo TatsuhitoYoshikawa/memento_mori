@@ -14,7 +14,8 @@ enum CountUnit { full, days, hours, seconds }
 /// 残り寿命を毎秒カウントダウン表示する画面。
 ///
 /// 余命は固定せず、起動・復帰・暦日変化のたびに再計算する（加齢で平均余命が伸びるため）。
-/// 起動時、前回起動から暦日が変わっていれば、前回からの差分を分解して知らせる。
+/// 起動・復帰時、前回開いてから一定時間（[_minDeltaInterval]）以上経過していれば、
+/// 前回からの差分（時間経過による減少／加齢による増加）を分解して知らせる。
 class CountdownScreen extends StatefulWidget {
   final UserProfile profile;
 
@@ -26,6 +27,9 @@ class CountdownScreen extends StatefulWidget {
 
 class _CountdownScreenState extends State<CountdownScreen>
     with WidgetsBindingObserver {
+  /// 変動を表示する最小経過時間。これ未満の復帰では表示しない（頻繁なポップアップ防止）。
+  static const Duration _minDeltaInterval = Duration(seconds: 60);
+
   final _store = ProfileStore();
   Timer? _timer;
   LifeTable? _table;
@@ -75,8 +79,9 @@ class _CountdownScreenState extends State<CountdownScreen>
     final newRemaining = table.remainingDays(widget.profile, now);
 
     final snapshot = await _store.loadSnapshot();
-    final bool dayChanged = snapshot != null &&
-        _dateOnly(snapshot.openedAt) != _dateOnly(now);
+    // 前回開いてから一定時間以上経過していれば変動を表示する（初回は表示しない）。
+    final bool shouldShowDelta = snapshot != null &&
+        now.difference(snapshot.openedAt) >= _minDeltaInterval;
 
     // 余命を反映。
     _recompute(now);
@@ -86,7 +91,7 @@ class _CountdownScreenState extends State<CountdownScreen>
     await _store
         .saveSnapshot(LifeSnapshot(openedAt: now, remainingDays: newRemaining));
 
-    if (dayChanged) {
+    if (shouldShowDelta) {
       final delta = LifeDelta.compute(
         oldRemainingDays: snapshot.remainingDays,
         oldOpenedAt: snapshot.openedAt,
