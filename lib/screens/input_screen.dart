@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:country_picker/country_picker.dart';
 
 import '../models/user_profile.dart';
@@ -110,7 +110,7 @@ class _InputScreenState extends State<InputScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accent.withOpacity(.4),
+                          color: AppColors.accent.withValues(alpha: .4),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),
@@ -267,7 +267,7 @@ class _InputScreenState extends State<InputScreen> {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: AppColors.accent.withOpacity(.28),
+                      color: AppColors.accent.withValues(alpha: .28),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -400,7 +400,7 @@ class _BirthDateSheetState extends State<_BirthDateSheet> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF5A3C28).withOpacity(.2),
+              color: const Color(0xFF5A3C28).withValues(alpha: .2),
               blurRadius: 30,
               offset: const Offset(0, -8),
             ),
@@ -655,7 +655,7 @@ class _PrimaryButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accent.withOpacity(.34),
+                  color: AppColors.accent.withValues(alpha: .34),
                   blurRadius: 24,
                   offset: const Offset(0, 10),
                 ),

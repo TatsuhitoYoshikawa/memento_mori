@@ -4,24 +4,25 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.14.0
+  flutter: 3.50.1
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
-  intl: any
-  shared_preferences: ^2.2.0
-  country_picker: ^2.0.27
+  intl: ^0.20.3
+  shared_preferences: ^2.5.6
+  country_picker: ^2.0.28
   # 暖色デザイン用フォント（Shippori Mincho / Zen Kaku Gothic New / Roboto）
-  google_fonts: ^6.2.1
+  google_fonts: ^9.0.0
+  material_ui: ^1.11.1
+  cupertino_ui: ^1.1.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
-  flutter_launcher_icons: ^0.14.1
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true

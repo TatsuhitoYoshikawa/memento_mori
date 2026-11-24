@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:country_picker/country_picker.dart';
 
 import 'models/user_profile.dart';
@@ -31,11 +30,11 @@ class MementoMoriApp extends StatelessWidget {
       // 日本語表示（国名ピッカー・日付ピッカーを含む）。
       locale: const Locale('ja'),
       supportedLocales: const [Locale('ja'), Locale('en')],
+      // Material / Cupertino / Widgets の各ローカライズは material_ui の
+      // GlobalMaterialLocalizations.delegates にまとめて含まれる。
       localizationsDelegates: const [
         CountryLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+        ...GlobalMaterialLocalizations.delegates,
       ],
       home: const _Root(),
     );
