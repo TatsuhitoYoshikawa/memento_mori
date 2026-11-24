@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/user_profile.dart';
 import '../services/countdown_formatter.dart';
@@ -282,7 +282,7 @@ class _CountdownScreenState extends State<CountdownScreen>
           boxShadow: live
               ? [
                   BoxShadow(
-                    color: AppColors.accent.withOpacity(.18),
+                    color: AppColors.accent.withValues(alpha: .18),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
                   ),
@@ -467,7 +467,7 @@ class _DeltaSheet extends StatelessWidget {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF5A3C28).withOpacity(.2),
+              color: const Color(0xFF5A3C28).withValues(alpha: .2),
               blurRadius: 30,
               offset: const Offset(0, -8),
             ),
@@ -491,7 +491,7 @@ class _DeltaSheet extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.accent.withOpacity(.12),
+                color: AppColors.accent.withValues(alpha: .12),
               ),
               child: const Text('🌅', style: TextStyle(fontSize: 26)),
             ),
@@ -542,7 +542,7 @@ class _DeltaSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accent.withOpacity(.3),
+                          color: AppColors.accent.withValues(alpha: .3),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
